@@ -1,0 +1,6 @@
+CREATE TABLE ClientCar (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  client_id BIGINT,
+  FOREIGN KEY (id) REFERENCES Car(id),
+  FOREIGN KEY (client_id) REFERENCES Client(id)
+);

@@ -22,8 +22,9 @@ public class TokenService {
     public String gerarToken(User user) {
         try {
             var algoritmo = Algorithm.HMAC256(SECRET);
+
             return JWT.create()
-                    .withIssuer("Forum_hub")
+                    .withIssuer("cto")
                     .withSubject(user.getUsername())
                     .withExpiresAt(dataExpiracao())
                     .sign(algoritmo);
@@ -33,17 +34,22 @@ public class TokenService {
     }
 
     private Instant dataExpiracao() {
-         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
+
+        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 
     public String getSubject(String tokenJWT) {
         try {
+            System.out.println("Verifying token: {}"+ tokenJWT);
+
             var algoritmo = Algorithm.HMAC256(SECRET);
+
             return JWT.require(algoritmo)
                     .withIssuer("cto")
                     .build()
                     .verify(tokenJWT)
                     .getSubject();
+
         } catch (JWTVerificationException exception) {
             throw new RuntimeException("Token JWT inválido ou expirado!");
         }

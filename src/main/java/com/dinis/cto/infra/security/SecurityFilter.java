@@ -1,5 +1,6 @@
 package com.dinis.cto.infra.security;
 
+
 import com.dinis.cto.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,8 +18,6 @@ import java.io.IOException;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
-
-
     @Autowired
     private TokenService tokenService;
 
@@ -31,6 +30,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         var token = recuperarToken(request);
 
         if(token != null){
+
             var subject = tokenService.getSubject(token);
 
             var user =  repository.findByContactEmail(subject);

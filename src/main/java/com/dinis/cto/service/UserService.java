@@ -9,11 +9,14 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     
     @Autowired
     private UserRepository repository;
@@ -24,6 +27,7 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
 
     public void regiter(DataUserDTO data) {
 
@@ -36,6 +40,12 @@ public class UserService {
     public Authentication authentication(AuthenticationDTO data) {
 
         var token = new UsernamePasswordAuthenticationToken(data.user(), data.password());
+
         return manager.authenticate(token);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return repository.findByContactEmail(username);
     }
 }

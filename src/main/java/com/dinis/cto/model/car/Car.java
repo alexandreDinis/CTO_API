@@ -21,5 +21,14 @@ public class Car {
     private String year;
     private int initialKm;
     private LocalDate createDate;
+
+    public Car(String make, String model, String place, String year, int initialKm, LocalDate createDate) {
+        this.make = make;
+        this.model = model;
+        this.place = place;
+        this.year = year;
+        this.initialKm = initialKm;
+        this.createDate = createDate;
+    }
 }
 

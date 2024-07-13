@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity login (@RequestBody @Valid AuthenticationDTO data) {
+    public ResponseEntity<TokenJWT> login (@RequestBody @Valid AuthenticationDTO data) {
 
         var authentication = service.authentication(data);
 

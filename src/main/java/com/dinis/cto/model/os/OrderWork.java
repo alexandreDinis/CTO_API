@@ -16,6 +16,8 @@ public class OrderWork {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    private BudgetEnum budget;
     private LocalDate createDate;
     private int initKm;
     private int finalKm;

@@ -18,4 +18,8 @@ public class Parts {
     private String name;
     private String description;
     private BigDecimal value;
+
+    @ManyToOne
+    @JoinColumn(name = "work_id")
+    private Work work;
 }

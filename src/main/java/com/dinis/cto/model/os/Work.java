@@ -21,9 +21,9 @@ public class Work {
     @JoinColumn(name = "car_id", referencedColumnName = "id")
     private ClientCar car;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "parts_id", referencedColumnName = "id")
-    private Parts parts;
+
+    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Parts> parts;
 
     @ManyToOne
     @JoinColumn(name = "order_work_id", referencedColumnName = "id")

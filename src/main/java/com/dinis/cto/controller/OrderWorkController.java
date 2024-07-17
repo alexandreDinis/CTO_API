@@ -2,14 +2,18 @@ package com.dinis.cto.controller;
 
 
 import com.dinis.cto.dto.os.DataOrderWorkDTO;
+import com.dinis.cto.dto.person.DetailOsDTO;
+import com.dinis.cto.dto.person.ResponseOsFalseDTO;
+import com.dinis.cto.dto.person.ResponseOsTrueDTO;
 import com.dinis.cto.service.OrderWorkService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("os")
@@ -20,11 +24,30 @@ public class OrderWorkController {
     private OrderWorkService service;
 
 
-    public ResponseEntity<DataOrderWorkDTO> register(@RequestBody @Valid DataOrderWorkDTO data){
+    @PostMapping("/open")
+    @Transactional
+    public ResponseEntity<DataOrderWorkDTO> openOS(@RequestBody @Valid DataOrderWorkDTO data){
 
-        service.register(data);
+        service.openOS(data);
 
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("list/opens")
+    public Page<ResponseOsTrueDTO> listStatusTrue(Pageable pageable) {
+
+        return service.listStatusTrue(pageable);
+    }
+
+    @GetMapping("list/closed")
+    public Page<ResponseOsFalseDTO> listStatusFalse(Pageable pageable) {
+        return service.listStatusFalse(pageable);
+    }
+    @GetMapping("{id}")
+    public ResponseEntity<DetailOsDTO> listOsDTO(@PathVariable Long id ) {
+
+        var orderWork = service.getOrderWorkDetails(id);
+
+        return ResponseEntity.ok(orderWork);
+    }
 }

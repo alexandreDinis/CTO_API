@@ -1,1 +1,0 @@
-ALTER TABLE OrderWork ADD COLUMN budget VARCHAR(255);

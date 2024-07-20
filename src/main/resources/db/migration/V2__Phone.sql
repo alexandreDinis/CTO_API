@@ -1,6 +1,6 @@
-CREATE TABLE Phone (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  description VARCHAR(255),
-  number VARCHAR(20)
+CREATE TABLE phone (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    description VARCHAR(255),
+    number VARCHAR(20)
 );
 

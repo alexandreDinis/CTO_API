@@ -1,4 +1,4 @@
-package com.dinis.cto.dto.person;
+package com.dinis.cto.dto.os;
 
 import com.dinis.cto.model.os.OrderWork;
 

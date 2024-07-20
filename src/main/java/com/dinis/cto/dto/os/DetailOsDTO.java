@@ -1,6 +1,6 @@
-package com.dinis.cto.dto.person;
+package com.dinis.cto.dto.os;
 
-import com.dinis.cto.dto.os.DataWorkDTO;
+import com.dinis.cto.dto.person.ClientSummary;
 import com.dinis.cto.model.os.BudgetEnum;
 import com.dinis.cto.model.os.OrderWork;
 

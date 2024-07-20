@@ -1,10 +1,7 @@
 package com.dinis.cto.controller;
 
 
-import com.dinis.cto.dto.os.DataOrderWorkDTO;
-import com.dinis.cto.dto.person.DetailOsDTO;
-import com.dinis.cto.dto.person.ResponseOsFalseDTO;
-import com.dinis.cto.dto.person.ResponseOsTrueDTO;
+import com.dinis.cto.dto.os.*;
 import com.dinis.cto.service.OrderWorkService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
@@ -50,4 +47,13 @@ public class OrderWorkController {
 
         return ResponseEntity.ok(orderWork);
     }
+    @PutMapping("{id}/discount")
+    @Transactional
+    public ResponseEntity<?> applyDiscount(@PathVariable Long id, @RequestBody DataOsDiscountDTO data) {
+
+        service.applyDiscount(id, data);
+
+        return ResponseEntity.ok().build();
+    }
+
 }

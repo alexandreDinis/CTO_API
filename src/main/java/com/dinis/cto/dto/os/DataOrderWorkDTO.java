@@ -1,5 +1,6 @@
 package com.dinis.cto.dto.os;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ public record DataOrderWorkDTO(
          @NotNull
          Long clientId,
 
+         @Valid
          List<DataWorkDTO> works
 
 ) {

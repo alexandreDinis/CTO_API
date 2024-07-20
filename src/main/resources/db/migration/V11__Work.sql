@@ -1,10 +1,9 @@
-CREATE TABLE Work (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  car_id BIGINT,
-  parts_id BIGINT,
-  order_work_id BIGINT,
-  description VARCHAR(255),
-  FOREIGN KEY (car_id) REFERENCES ClientCar(id),
-  FOREIGN KEY (parts_id) REFERENCES Parts(id),
-  FOREIGN KEY (order_work_id) REFERENCES OrderWork(id)
+CREATE TABLE work (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    car_id BIGINT,
+    order_work_id BIGINT,
+    description VARCHAR(255),
+    value DECIMAL(10, 2),
+    FOREIGN KEY (car_id) REFERENCES client_car(id),
+    FOREIGN KEY (order_work_id) REFERENCES order_work(id)
 );

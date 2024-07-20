@@ -1,13 +1,14 @@
-CREATE TABLE OrderWork (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  createDate DATE,
-  initKm INT,
-  finalKm INT,
-  status BOOLEAN,
-  client_id BIGINT,
-  serviceValue DECIMAL(19, 2),
-  discountValue DECIMAL(19, 2),
-  discountPercentage DECIMAL(5, 2),
-  valueTotal DECIMAL(19, 2),
-  FOREIGN KEY (client_id) REFERENCES Client(id)
+CREATE TABLE order_work (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    budget ENUM('ORÇAMENTO', 'SERVIÇO'),
+    create_date DATE,
+    init_km INT,
+    final_km INT,
+    status BOOLEAN,
+    client_id BIGINT,
+    service_value DECIMAL(10, 2),
+    discount_value DECIMAL(10, 2),
+    discount_percentage DECIMAL(5, 2),
+    value_total DECIMAL(10, 2),
+    FOREIGN KEY (client_id) REFERENCES client(id)
 );

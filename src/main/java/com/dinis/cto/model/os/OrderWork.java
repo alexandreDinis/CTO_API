@@ -32,7 +32,7 @@ public class OrderWork {
     @JoinColumn(name = "client_id", referencedColumnName = "id")
     private Client client;
 
-    @OneToMany(mappedBy = "orderWork", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "orderWork", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Work> works;
 
     private BigDecimal serviceValue;

@@ -7,6 +7,8 @@ import java.time.LocalDate;
 
 @Entity
 @Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -17,15 +19,15 @@ public class Car {
 
     private String make;
     private String model;
-    private String place;
+    private String plate;
     private String year;
     private int initialKm;
     private LocalDate createDate;
 
-    public Car(String make, String model, String place, String year, int initialKm, LocalDate createDate) {
+    public Car(String make, String model, String plate, String year, int initialKm, LocalDate createDate) {
         this.make = make;
         this.model = model;
-        this.place = place;
+        this.plate = plate;
         this.year = year;
         this.initialKm = initialKm;
         this.createDate = createDate;

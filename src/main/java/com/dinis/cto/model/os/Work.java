@@ -26,7 +26,7 @@ public class Work {
     @JoinColumn(name = "car_id", referencedColumnName = "id")
     private ClientCar car;
 
-    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Parts> parts;
 
     @ManyToOne

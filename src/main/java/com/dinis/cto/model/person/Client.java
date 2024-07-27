@@ -1,6 +1,5 @@
 package com.dinis.cto.model.person;
 import com.dinis.cto.dto.person.DataClientDTO;
-import com.dinis.cto.dto.person.DataContactDTO;
 import com.dinis.cto.model.os.OrderWork;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,7 +30,10 @@ public class Client {
     @Enumerated(EnumType.STRING)
     private PerformanceEnum performance;
 
+    @Column(unique = true)
     private String cpf;
+
+    @Column(unique = true)
     private String cnpj;
     private LocalDate createDate;
 

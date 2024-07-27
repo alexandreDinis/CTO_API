@@ -33,6 +33,7 @@ public class User implements UserDetails {
     private String password;
     private LocalDate createDate;
 
+    @Column(unique = true)
     private String cpf;
     private String dateBirth;
 

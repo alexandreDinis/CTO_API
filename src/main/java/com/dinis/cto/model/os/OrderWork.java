@@ -58,4 +58,8 @@ public class OrderWork {
                 .map(Work::getValue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    public void closeOs() {
+        this.status = false;
+    }
 }

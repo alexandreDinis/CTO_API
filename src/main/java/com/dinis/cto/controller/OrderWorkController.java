@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("os")
 @SecurityRequirement(name = "bearer-key")
@@ -31,22 +33,25 @@ public class OrderWorkController {
     }
 
     @GetMapping("list/opens")
-    public Page<ResponseOsTrueDTO> listStatusTrue(Pageable pageable) {
-
-        return service.listStatusTrue(pageable);
+    public ResponseEntity<PaginatedResponseWithTotal<ResponseOsTrueDTO>> listStatusTrue(Pageable pageable) {
+        PaginatedResponseWithTotal<ResponseOsTrueDTO> response = service.listStatusTrue(pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("list/closed")
-    public Page<ResponseOsFalseDTO> listStatusFalse(Pageable pageable) {
-        return service.listStatusFalse(pageable);
+    public ResponseEntity<PaginatedResponseWithTotal<ResponseOsFalseDTO>> listStatusFalse(Pageable pageable) {
+        PaginatedResponseWithTotal<ResponseOsFalseDTO> response = service.listStatusFalse(pageable);
+        return ResponseEntity.ok(response);
     }
+
     @GetMapping("{id}")
-    public ResponseEntity<DetailOsDTO> listOsDTO(@PathVariable Long id ) {
+    public ResponseEntity<DetailOsDTO> listDetailsOs(@PathVariable Long id ) {
 
         var orderWork = service.getOrderWorkDetails(id);
 
         return ResponseEntity.ok(orderWork);
     }
+
     @PutMapping("{id}/discount")
     @Transactional
     public ResponseEntity<?> applyDiscount(@PathVariable Long id, @RequestBody DataOsDiscountDTO data) {
@@ -56,4 +61,19 @@ public class OrderWorkController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("{id}")
+    @Transactional
+    public ResponseEntity<?> closeOs (@PathVariable Long id) {
+
+        service.closeOs(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("search-plate")
+    public ResponseEntity<List<DetailOsDTO>> getOrderWorksByClientAndCarPlate(@RequestBody ClientCarSearchDTO searchDTO) {
+
+        List<DetailOsDTO> orderWorkDTOs = service.findOrderWorksByClientAndCarPlate(searchDTO);
+        return ResponseEntity.ok(orderWorkDTOs);
+    }
 }

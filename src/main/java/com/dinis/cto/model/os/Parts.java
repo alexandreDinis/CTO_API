@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 
 @Entity
 @Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Parts {

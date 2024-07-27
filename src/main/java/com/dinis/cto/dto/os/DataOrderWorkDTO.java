@@ -13,10 +13,7 @@ public record DataOrderWorkDTO(
          @NotNull
          LocalDate createDate,
 
-
          int initKm,
-
-
          int finalKm,
 
          @NotNull

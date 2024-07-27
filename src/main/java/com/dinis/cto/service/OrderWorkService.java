@@ -85,15 +85,22 @@ public class OrderWorkService {
         orderWork.setServiceValue(totalServiceValue);
     }
 
-    public Page<ResponseOsTrueDTO> listStatusTrue(Pageable pageable) {
+    public PaginatedResponseWithTotal<ResponseOsTrueDTO> listStatusTrue(Pageable pageable) {
         Page<OrderWork> orderWorks = orderWorkRepository.findByStatusTrue(pageable);
-        return orderWorks.map(ResponseOsTrueDTO::new);
+        Page<ResponseOsTrueDTO> responseOsTrueDTOPage = orderWorks.map(ResponseOsTrueDTO::new);
+
+        BigDecimal totalValue = calculateTotalServiceValue(orderWorks.getContent());
+
+        return new PaginatedResponseWithTotal<>(responseOsTrueDTOPage, totalValue);
     }
 
-    public Page<ResponseOsFalseDTO> listStatusFalse(Pageable pageable) {
+    public PaginatedResponseWithTotal<ResponseOsFalseDTO> listStatusFalse(Pageable pageable) {
         Page<OrderWork> orderWorks = orderWorkRepository.findByStatusFalse(pageable);
-        return orderWorks.map(ResponseOsFalseDTO::new);
+        Page<ResponseOsFalseDTO> responseOsFalseDTOPage = orderWorks.map(ResponseOsFalseDTO::new);
 
+        BigDecimal totalValue = calculateTotalServiceValue(orderWorks.getContent());
+
+        return new PaginatedResponseWithTotal<>(responseOsFalseDTOPage, totalValue);
     }
 
     public DetailOsDTO getOrderWorkDetails(Long id) {
@@ -129,6 +136,30 @@ public class OrderWorkService {
         }
 
         orderWorkRepository.save(orderWork);
+    }
+
+    public void closeOs(Long id) {
+        OrderWork orderWork = orderWorkRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("OrderWork not found with id: " + id));
+        orderWork.closeOs();
+    }
+
+    public BigDecimal calculateTotalServiceValue(List<OrderWork> orderWorks) {
+        return orderWorks.stream()
+                .map(OrderWork::getServiceValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<DetailOsDTO> findOrderWorksByClientAndCarPlate(ClientCarSearchDTO searchDTO) {
+        List<OrderWork> orderWorks = orderWorkRepository.findByClientIdAndCarPlate(searchDTO.clientId(), searchDTO.plate());
+
+        if (orderWorks.isEmpty()) {
+            throw new EntityNotFoundException("Esse carro não consta no banco de dados");
+        }
+
+        return orderWorks.stream()
+                .map(DetailOsDTO::new)
+                .collect(Collectors.toList());
     }
 }
 

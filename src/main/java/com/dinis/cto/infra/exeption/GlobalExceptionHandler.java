@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -22,14 +23,15 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex) {
-        return ResponseEntity.notFound().build();
+    @ResponseBody
+    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseBody
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
         var fieldErrors = ex.getBindingResult().getFieldErrors();
         var errors = fieldErrors.stream()
@@ -39,6 +41,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseBody
     public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex) {
         var errors = ex.getConstraintViolations().stream()
                 .map(cv -> new FieldErrorDto(cv.getPropertyPath().toString(), cv.getMessage()))
@@ -47,45 +50,47 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
     public ResponseEntity<Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         var error = new FieldErrorDto(ex.getName(), "Tipo inválido para o parâmetro " + ex.getName());
         return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
     public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Violação de integridade de dados: " + ex.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
     public ResponseEntity<Object> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body("Erro na leitura da mensagem HTTP: " + ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body("Argumento inválido: " + ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: " + ex.getMessage());
     }
 
     @ExceptionHandler(EmptyResultDataAccessException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
     public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex) {
         return ResponseEntity.notFound().build();
     }
 
     private record FieldErrorDto(String campo, String mensagem) {
-        public FieldErrorDto(FieldError erro) {
+        public FieldErrorDto(org.springframework.validation.FieldError erro) {
             this(erro.getField(), erro.getDefaultMessage());
         }
     }
+
+    private record ErrorResponse(String error, String message) {}
 }

@@ -27,7 +27,7 @@ public record DetailOsDTO(
                 orderWork.getBudget(),
                 orderWork.getCreateDate(),
                 orderWork.getStatus(),
-                new ClientSummary(orderWork.getClient().getFantasyName(), orderWork.getClient().getAddress().getCity()),
+                new ClientSummary(orderWork.getClient().getId(),orderWork.getClient().getFantasyName(), orderWork.getClient().getAddress().getCity()),
                 orderWork.getWorks().stream()
                         .map(DataWorkDTO::new)
                         .collect(Collectors.toList()),

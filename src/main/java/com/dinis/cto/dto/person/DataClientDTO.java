@@ -18,6 +18,8 @@ public record DataClientDTO(
          String fantasyName,
          String corporateReason,
 
+         Boolean status,
+
          @NotNull
          @Valid
          DataAddressDTO address,
@@ -36,6 +38,7 @@ public record DataClientDTO(
     this(data.getId(),
             data.getFantasyName(),
             data.getCorporateReason(),
+            data.getStatus(),
             new DataAddressDTO(data.getAddress()),
             data.getCpf(),
             data.getCnpj(),

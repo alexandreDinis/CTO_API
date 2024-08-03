@@ -1,5 +1,6 @@
 package com.dinis.cto.repository;
 
+import com.dinis.cto.model.os.BudgetEnum;
 import com.dinis.cto.model.os.OrderWork;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,4 +46,6 @@ public interface OrderWorkRepository extends JpaRepository<OrderWork,Long> {
 
     @Query("SELECT o FROM OrderWork o WHERE o.status = false AND YEAR(o.createDate) = :year")
     List<OrderWork> findClosedOrderWorksByYear(@Param("year") int year);
+
+    List<OrderWork> findByBudgetAndCreateDateBetween(BudgetEnum budget, LocalDate startDate, LocalDate endDate);
 }

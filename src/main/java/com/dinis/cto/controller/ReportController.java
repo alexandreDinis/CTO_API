@@ -37,26 +37,29 @@ public class ReportController {
         return ResponseEntity.ok(response);
     }
 
+    //Lista a quantidade de peças, valor e media por rang de data
     @PostMapping("/parts-count")
-    public ResponseEntity<ReportDataDTO> countPartsMonth(@RequestBody PeriodDTO periodDTO) {
-        ReportDataDTO report = service.countPartsMonth(periodDTO);
+    @Transactional(readOnly = true)
+    public ResponseEntity<ReportDataDTO> countPartsInRange(@RequestBody DateRangeDTO dateRangeDTO) {
+        ReportDataDTO report = service.generatePartsReport(dateRangeDTO);
         return ResponseEntity.ok(report);
     }
 
-    //Todo: melhorar ele esta retornando apenas a quantidade, temos que retornar igual parts.
+    //Mostra a quantidade de carros feito no mes
     @PostMapping("/cars-count")
     public ResponseEntity<ClientCarReportDTO> getClientCarReport(@RequestBody PeriodDTO periodDTO) {
         ClientCarReportDTO report = service.generateClientCarReport(periodDTO);
         return ResponseEntity.ok(report);
     }
 
+    //Mostra a quantidade de cliente atendido por mes
     @PostMapping("/client-attendance")
     public ResponseEntity<ClientAttendanceReportDTO> getClientAttendanceReport(@RequestBody PeriodDTO periodDTO) {
         ClientAttendanceReportDTO report = service.generateClientAttendanceReport(periodDTO);
         return ResponseEntity.ok(report);
     }
 
-    //Todo: esta retornando, agora precisa criar outras empresas para ver se tudo funciona
+    // retorna o ranking de cliente por ano ou mes
     @GetMapping("client-ranking")
     public ResponseEntity<List<ClientRankingDTO>> getClientRanking(@RequestBody PeriodDTO data) {
 
@@ -65,7 +68,7 @@ public class ReportController {
     }
 
 
-    //Todo: Falta testar
+    //relarorio de comparação de vendas de um ano para o outro completo
     @PostMapping("/monthly-comparison")
     public ResponseEntity<MonthlyComparisonReportDTO> generateMonthlyComparisonReport(
             @RequestBody PeriodComparisonDTO periodComparisonDTO) {
@@ -96,7 +99,8 @@ public class ReportController {
         return ResponseEntity.ok(report);
     }
 
-    //Todo: testar
+    //Todo: o teste falhou o retorno esta no insominia
+    //relatorio de abastecimento
 
     @PostMapping("/fuel")
     public ResponseEntity<ReportFuelDTO> getFuelReport(@RequestBody PeriodDTO periodDTO) {

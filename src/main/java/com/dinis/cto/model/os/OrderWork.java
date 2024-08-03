@@ -61,5 +61,6 @@ public class OrderWork {
 
     public void closeOs() {
         this.status = false;
+        this.budget = BudgetEnum.SERVIÇO;
     }
 }

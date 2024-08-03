@@ -20,6 +20,7 @@ public class FuelController {
     @Autowired
     private FuelService service;
 
+    // abre o abastecimento
     @PostMapping("/open")
     @Transactional
     public ResponseEntity<DataFuelDTO> openFuel(@RequestBody @Valid DataFuelDTO data) {
@@ -28,7 +29,4 @@ public class FuelController {
 
         return ResponseEntity.ok().build();
     }
-
-
-
 }

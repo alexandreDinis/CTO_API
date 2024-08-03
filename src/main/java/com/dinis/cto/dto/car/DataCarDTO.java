@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public record DataCarDTO(
 
 
+        Long id,
 
         @NotBlank
         String make,
@@ -27,7 +28,7 @@ public record DataCarDTO(
         LocalDate createDate
 ) {
         public DataCarDTO(Car data){
-                this( data.getMake(), data.getModel(), data.getPlate(), data.getYear(),
+                this( data.getId(), data.getMake(), data.getModel(), data.getPlate(), data.getYear(),
                         data.getInitialKm(), data.getCreateDate());
         }
 }

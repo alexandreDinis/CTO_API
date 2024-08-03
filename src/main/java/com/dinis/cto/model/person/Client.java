@@ -58,5 +58,6 @@ public class Client {
                 .map(Contact::new)
                 .collect(Collectors.toList());
         this.createDate = data.createDate();
+
     }
 }

@@ -3,6 +3,7 @@ package com.dinis.cto.service;
 
 import com.dinis.cto.dto.os.*;
 import com.dinis.cto.model.car.ClientCar;
+import com.dinis.cto.model.os.BudgetEnum;
 import com.dinis.cto.model.os.OrderWork;
 import com.dinis.cto.model.os.Parts;
 import com.dinis.cto.model.os.Work;
@@ -41,6 +42,7 @@ public class OrderWorkService {
 
             var orderWork = new OrderWork(data);
             orderWork.setClient(client);
+            orderWork.setBudget(BudgetEnum.ORÇAMENTO);
 
             List<Work> works = data.works().stream().map(workDTO -> {
                 ClientCar car = new ClientCar(workDTO.car());
@@ -90,6 +92,7 @@ public class OrderWorkService {
         Page<ResponseOsTrueDTO> responseOsTrueDTOPage = orderWorks.map(ResponseOsTrueDTO::new);
 
         BigDecimal totalValue = calculateTotalServiceValue(orderWorks.getContent());
+
 
         return new PaginatedResponseWithTotal<>(responseOsTrueDTOPage, totalValue);
     }
@@ -141,7 +144,17 @@ public class OrderWorkService {
     public void closeOs(Long id) {
         OrderWork orderWork = orderWorkRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderWork not found with id: " + id));
-        orderWork.closeOs();
+        var discountPercentage = orderWork.getDiscountPercentage();
+        var discountValue = orderWork.getDiscountValue();
+        if(discountValue == null && discountPercentage == null) {
+            var serviceValue = orderWork.getServiceValue();
+            orderWork.setValueTotal(serviceValue);
+            orderWork.closeOs();
+        } else {
+
+            orderWork.closeOs();
+        }
+
     }
 
     public BigDecimal calculateTotalServiceValue(List<OrderWork> orderWorks) {

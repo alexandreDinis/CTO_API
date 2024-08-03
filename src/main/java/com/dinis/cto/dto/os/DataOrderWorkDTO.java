@@ -1,5 +1,6 @@
 package com.dinis.cto.dto.os;
 
+import com.dinis.cto.model.os.BudgetEnum;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
@@ -8,19 +9,22 @@ import java.util.List;
 
 public record DataOrderWorkDTO(
 
-         Long id,
+        Long id,
 
-         @NotNull
-         LocalDate createDate,
 
-         int initKm,
-         int finalKm,
+        @NotNull
+        LocalDate createDate,
 
-         @NotNull
-         Long clientId,
+        int initKm,
+        int finalKm,
 
-         @Valid
-         List<DataWorkDTO> works
+        @NotNull
+        Long clientId,
+
+
+
+        @Valid
+        List<DataWorkDTO> works
 
 ) {
 }

@@ -7,6 +7,7 @@ import com.dinis.cto.dto.os.ResponseOsFalseDTO;
 import com.dinis.cto.dto.report.*;
 import com.dinis.cto.model.car.Fuel;
 import com.dinis.cto.model.car.Maintenance;
+import com.dinis.cto.model.os.BudgetEnum;
 import com.dinis.cto.model.os.OrderWork;
 import com.dinis.cto.model.os.Parts;
 import com.dinis.cto.repository.*;
@@ -60,28 +61,27 @@ public class ReportService {
         return new PaginatedResponseWithTotal<>(responseOsFalseDTOList, totalValue);
     }
 
-    public ReportDataDTO countPartsMonth(PeriodDTO periodDTO) {
-        Integer year = periodDTO.year();
-        Integer month = periodDTO.month();
+    public ReportDataDTO generatePartsReport(DateRangeDTO dateRangeDTO) {
+        LocalDate startDate = dateRangeDTO.startDate();
+        LocalDate endDate = dateRangeDTO.endDate();
 
-        List<OrderWork> orderWorks = orderWorkRepository.findOrderWorksByYearAndMonth(year, month);
+        List<OrderWork> orderWorks = orderWorkRepository.findByBudgetAndCreateDateBetween(BudgetEnum.SERVIÇO, startDate, endDate);
 
         List<Parts> parts = orderWorks.stream()
                 .flatMap(orderWork -> orderWork.getWorks().stream())
                 .flatMap(work -> work.getParts().stream())
                 .toList();
 
+        long quantity = parts.size();
         BigDecimal totalValue = parts.stream()
                 .map(Parts::getValue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal averageValue = parts.isEmpty() ? BigDecimal.ZERO
-                : totalValue.divide(new BigDecimal(parts.size()), RoundingMode.HALF_UP);
-
-        long quantity = parts.size();
+        BigDecimal averageValue = parts.isEmpty() ? BigDecimal.ZERO : totalValue.divide(new BigDecimal(parts.size()), RoundingMode.HALF_UP);
 
         return new ReportDataDTO(quantity, totalValue, averageValue);
     }
+
+
 
     public ClientCarReportDTO generateClientCarReport(PeriodDTO periodDTO) {
         Integer year = periodDTO.year();

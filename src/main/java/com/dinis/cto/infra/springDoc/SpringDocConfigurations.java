@@ -22,12 +22,12 @@ public class SpringDocConfigurations {
                                         .bearerFormat("JWT")))
                 .info(new Info()
                         .title("Forum_hub")
-                        .description("API Rest da aplicação Forum Hub, prototipo de um forum")
+                        .description("API Rest para trabalhadores de reparo automotivo")
                         .contact(new Contact()
                                 .name("Time Backend")
                                 .email("dinisde@gmail.com"))
                         .license(new License()
                                 .name("Apache 2.0")
-                                .url("http://voll.med/api/licenca")));
+                                .url("http://dinis/api/licenca")));
     }
 }

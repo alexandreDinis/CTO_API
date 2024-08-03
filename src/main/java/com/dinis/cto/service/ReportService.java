@@ -1,27 +1,27 @@
 package com.dinis.cto.service;
 
-
+import com.dinis.cto.dto.car.*;
 import com.dinis.cto.dto.os.DateRangeDTO;
 import com.dinis.cto.dto.os.PaginatedResponseWithTotal;
 import com.dinis.cto.dto.os.ResponseOsFalseDTO;
 import com.dinis.cto.dto.report.*;
+import com.dinis.cto.model.car.Fuel;
+import com.dinis.cto.model.car.Maintenance;
 import com.dinis.cto.model.os.OrderWork;
 import com.dinis.cto.model.os.Parts;
-import com.dinis.cto.repository.ClientCarRepository;
-import com.dinis.cto.repository.OrderWorkRepository;
-import com.dinis.cto.repository.PartsRepository;
-import org.springframework.transaction.annotation.Transactional;
+import com.dinis.cto.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.time.YearMonth;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,7 +39,13 @@ public class ReportService {
     @Autowired
     private ClientCarRepository clientCarRepository;
 
-    @Transactional(readOnly = true)
+    @Autowired
+    private MaintenanceRepository maintenanceRepository;
+
+    @Autowired
+    private FuelRepository fuelRepository;
+
+
     public PaginatedResponseWithTotal<ResponseOsFalseDTO> listClosedOrdersWithinPeriod(DateRangeDTO dateRangeDTO) {
         LocalDate startDate = dateRangeDTO.startDate();
         LocalDate endDate = dateRangeDTO.endDate();
@@ -119,8 +125,8 @@ public class ReportService {
                 .sorted(Comparator.comparing(ClientRankingDTO::totalValue).reversed())
                 .collect(Collectors.toList());
     }
-    //Compara o valor total de os de um ano para outro
 
+    // Compara o valor total de os de um ano para outro
     public MonthlyComparisonReportDTO generateMonthlyComparisonReport(int year1, int year2) {
 
         // Obter os dados dos dois anos
@@ -176,4 +182,144 @@ public class ReportService {
                         Collectors.reducing(BigDecimal.ZERO, OrderWork::getValueTotal, BigDecimal::add)
                 ));
     }
+
+    public Page<ListMaintenanceCarDTO> getMaintenancesWithStatusTrue(Pageable pageable) {
+        Page<Maintenance> maintenancesPage = maintenanceRepository.findByStatusTrue(pageable);
+
+        return maintenancesPage.map(maintenance -> {
+            var car = maintenance.getUserCar();
+            List<MaintenanceDTO> maintenanceDTOs = car.getMaintenence().stream()
+                    .filter(Maintenance::getStatus)
+                    .map(m -> new MaintenanceDTO(
+                            m.getId(),
+                            m.getDescription(),
+                            m.getCreateDate(),
+                            m.getValue()
+                    ))
+                    .collect(Collectors.toList());
+
+            return new ListMaintenanceCarDTO(
+                    car.getId(),
+                    car.getMake(),
+                    car.getModel(),
+                    car.getPlate(),
+                    car.getInitialKm(),
+                    maintenanceDTOs
+            );
+        });
+    }
+
+    public ListMaintenanceReportDTO getMaintenancesWithStatusFalseAndTotal(Integer year, Pageable pageable) {
+        Page<Maintenance> maintenancesPage;
+
+        if (year != null) {
+            maintenancesPage = maintenanceRepository.findByStatusFalseAndYear(year, pageable);
+        } else {
+            maintenancesPage = maintenanceRepository.findByStatusFalse(pageable);
+        }
+
+        Page<ListMaintenanceCarDTO> maintenanceCarPage = maintenancesPage.map(maintenance -> {
+            var car = maintenance.getUserCar();
+            List<MaintenanceDTO> maintenanceDTOs = car.getMaintenence().stream()
+                    .filter(m -> !m.getStatus()) // status false
+                    .map(m -> new MaintenanceDTO(
+                            m.getId(),
+                            m.getDescription(),
+                            m.getCreateDate(),
+                            m.getValue()
+                    ))
+                    .collect(Collectors.toList());
+
+            return new ListMaintenanceCarDTO(
+                    car.getId(),
+                    car.getMake(),
+                    car.getModel(),
+                    car.getPlate(),
+                    car.getInitialKm(),
+                    maintenanceDTOs
+            );
+        });
+
+        BigDecimal totalCost = maintenanceCarPage.getContent().stream()
+                .flatMap(car -> car.maintenances().stream())
+                .map(MaintenanceDTO::value)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new ListMaintenanceReportDTO(maintenanceCarPage.getContent(), totalCost);
+    }
+
+    //Todo: precisa testar
+    //Gera um relatorio de abastecimento por ano e mes, se nao for enviado o mes,ele gera o relatorio total do ano por tipo de combustivel e o total.
+
+    public ReportFuelDTO generateFuelReport(int year, Integer monthNumber) {
+        LocalDate startDate;
+        LocalDate endDate;
+        String monthName = null;
+
+        if (monthNumber != null) {
+            try {
+                monthName = Month.of(monthNumber).name();
+                startDate = YearMonth.of(year, monthNumber).atDay(1);
+                endDate = YearMonth.of(year, monthNumber).atEndOfMonth();
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid month number: " + monthNumber);
+            }
+        } else {
+            startDate = YearMonth.of(year, Month.JANUARY).atDay(1);
+            endDate = YearMonth.of(year, Month.DECEMBER).atEndOfMonth();
+        }
+
+        List<Fuel> fuels = fuelRepository.findByDateBetween(startDate, endDate);
+
+        Map<String, List<Fuel>> fuelsByMonth = fuels.stream()
+                .collect(Collectors.groupingBy(fuel -> fuel.getDate().getMonth().toString()));
+
+        Map<String, FuelReport> fuelReports = new LinkedHashMap<>();
+        BigDecimal totalValue = BigDecimal.ZERO;
+
+        for (Map.Entry<String, List<Fuel>> entry : fuelsByMonth.entrySet()) {
+            String month = entry.getKey();
+            List<Fuel> monthlyFuels = entry.getValue();
+
+            Map<String, List<Fuel>> fuelsByType = monthlyFuels.stream()
+                    .collect(Collectors.groupingBy(fuel -> fuel.getType().name()));
+
+            Map<String, FuelReport> typeReports = new LinkedHashMap<>();
+            BigDecimal monthTotalValue = BigDecimal.ZERO;
+
+            for (Map.Entry<String, List<Fuel>> typeEntry : fuelsByType.entrySet()) {
+                String type = typeEntry.getKey();
+                List<Fuel> typeFuels = typeEntry.getValue();
+
+                BigDecimal totalAmount = typeFuels.stream()
+                        .map(Fuel::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                BigDecimal totalFuelValue = typeFuels.stream()
+                        .map(fuel -> fuel.getFuelPrice().multiply(fuel.getAmount()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                BigDecimal averagePrice = totalFuelValue.divide(totalAmount, BigDecimal.ROUND_HALF_UP);
+
+                typeReports.put(type, new FuelReport(averagePrice, totalAmount, totalFuelValue));
+                monthTotalValue = monthTotalValue.add(totalFuelValue);
+            }
+
+            fuelReports.put(month, typeReports.values().stream()
+                    .reduce((r1, r2) -> new FuelReport(
+                            r1.averagePrice().add(r2.averagePrice()).divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP),
+                            r1.totalAmount().add(r2.totalAmount()),
+                            r1.totalValue().add(r2.totalValue())
+                    )).orElse(new FuelReport(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)));
+
+            totalValue = totalValue.add(monthTotalValue);
+        }
+
+        return new ReportFuelDTO(
+                monthName != null ? "Relatório de Combustível de " + monthName + " " + year : "Relatório de Combustível de " + year,
+                fuelReports,
+                totalValue
+        );
+    }
 }
+

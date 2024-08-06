@@ -9,6 +9,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class FuelService {
 
@@ -19,21 +21,44 @@ public class FuelService {
     private UserCarRepository userCarRepository;
 
     public void openFuel(DataFuelDTO data) {
-
         var userCarOptional = userCarRepository.findById(data.carID());
 
         if (userCarOptional.isPresent()) {
-
             var car = userCarOptional.get();
-            var fuel = new Fuel(data, car);
-            fuelRepository.save(fuel);
-            car.addFuel(fuel);
-            car.updateTotalKm(data.km());
-            userCarRepository.save(car);
+
+            // Buscar o último abastecimento com status true
+            Optional<Fuel> lastFuelOptional = fuelRepository.findFirstByUserCarIdAndStatusTrueOrderByDateDesc(data.carID());
+
+            if (lastFuelOptional.isPresent()) {
+                Fuel lastFuel = lastFuelOptional.get();
+                var initialKm = car.getInitialKm();
+
+                var fuel = new Fuel(data, car);
+                fuel.setStatus(true);
+                fuelRepository.save(fuel);
+                car.updateTotalKm(data.km());
+                userCarRepository.save(car);
+                int newkm = car.getInitialKm();
+                int kmDifference = newkm - initialKm;
+                lastFuel.setKm(kmDifference);
+                lastFuel.setStatus(false);
+                fuelRepository.save(lastFuel);
+
+            } else {
+
+                // Criar novo abastecimento
+                var fuel = new Fuel(data, car);
+                fuel.setStatus(true); // Novo abastecimento tem status true
+                fuelRepository.save(fuel);
+                car.addFuel(fuel);
+                car.updateTotalKm(data.km());
+                userCarRepository.save(car);
+
+            }
+
+
         } else {
-            throw new EntityNotFoundException("Carro não encontrado" + data.carID());
+            throw new EntityNotFoundException("Carro não encontrado: " + data.carID());
         }
     }
-
-    //Todo: criar lista de abastecimento por combustivel e total por mes e geral
 }

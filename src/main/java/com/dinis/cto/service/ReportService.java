@@ -7,6 +7,7 @@ import com.dinis.cto.dto.os.ResponseOsFalseDTO;
 import com.dinis.cto.dto.report.*;
 import com.dinis.cto.model.car.Fuel;
 import com.dinis.cto.model.car.Maintenance;
+import com.dinis.cto.model.car.TypeFuel;
 import com.dinis.cto.model.os.BudgetEnum;
 import com.dinis.cto.model.os.OrderWork;
 import com.dinis.cto.model.os.Parts;
@@ -21,7 +22,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Month;
-import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,7 +80,6 @@ public class ReportService {
 
         return new ReportDataDTO(quantity, totalValue, averageValue);
     }
-
 
 
     public ClientCarReportDTO generateClientCarReport(PeriodDTO periodDTO) {
@@ -248,78 +247,47 @@ public class ReportService {
         return new ListMaintenanceReportDTO(maintenanceCarPage.getContent(), totalCost);
     }
 
-    //Todo: precisa testar
-    //Gera um relatorio de abastecimento por ano e mes, se nao for enviado o mes,ele gera o relatorio total do ano por tipo de combustivel e o total.
+    public FuelReportTotalsDTO generateFuelReport(DateRangeDTO dateRange, Long userCarId) {
+        LocalDate startDate = dateRange.startDate();
+        LocalDate endDate = dateRange.endDate();
 
-    public ReportFuelDTO generateFuelReport(int year, Integer monthNumber) {
-        LocalDate startDate;
-        LocalDate endDate;
-        String monthName = null;
+        String[] types = {TypeFuel.GASOLINA.name(), TypeFuel.ETANOL.name(), TypeFuel.GNV.name(), TypeFuel.DISEL.name()};
 
-        if (monthNumber != null) {
-            try {
-                monthName = Month.of(monthNumber).name();
-                startDate = YearMonth.of(year, monthNumber).atDay(1);
-                endDate = YearMonth.of(year, monthNumber).atEndOfMonth();
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid month number: " + monthNumber);
-            }
-        } else {
-            startDate = YearMonth.of(year, Month.JANUARY).atDay(1);
-            endDate = YearMonth.of(year, Month.DECEMBER).atEndOfMonth();
-        }
+        List<FuelReportDTO> reports = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        int totalKm = 0;
 
-        List<Fuel> fuels = fuelRepository.findByDateBetween(startDate, endDate);
+        for (String type : types) {
+            List<Fuel> fuels = fuelRepository.findByUserCarIdAndDateBetweenAndStatusFalseAndType(
+                    userCarId, startDate, endDate, TypeFuel.valueOf(type));
 
-        Map<String, List<Fuel>> fuelsByMonth = fuels.stream()
-                .collect(Collectors.groupingBy(fuel -> fuel.getDate().getMonth().toString()));
+            OptionalDouble averageFuelPriceOpt = fuels.stream()
+                    .mapToDouble(fuel -> fuel.getFuelPrice().doubleValue())
+                    .average();
 
-        Map<String, FuelReport> fuelReports = new LinkedHashMap<>();
-        BigDecimal totalValue = BigDecimal.ZERO;
+            BigDecimal averageFuelPrice = averageFuelPriceOpt.isPresent() ?
+                    BigDecimal.valueOf(averageFuelPriceOpt.getAsDouble()).setScale(2, RoundingMode.HALF_UP) :
+                    BigDecimal.ZERO;
 
-        for (Map.Entry<String, List<Fuel>> entry : fuelsByMonth.entrySet()) {
-            String month = entry.getKey();
-            List<Fuel> monthlyFuels = entry.getValue();
+            int typeTotalKm = fuels.stream()
+                    .mapToInt(Fuel::getKm)
+                    .sum();
 
-            Map<String, List<Fuel>> fuelsByType = monthlyFuels.stream()
-                    .collect(Collectors.groupingBy(fuel -> fuel.getType().name()));
+            BigDecimal typeTotalAmount = fuels.stream()
+                    .map(Fuel::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            Map<String, FuelReport> typeReports = new LinkedHashMap<>();
-            BigDecimal monthTotalValue = BigDecimal.ZERO;
-
-            for (Map.Entry<String, List<Fuel>> typeEntry : fuelsByType.entrySet()) {
-                String type = typeEntry.getKey();
-                List<Fuel> typeFuels = typeEntry.getValue();
-
-                BigDecimal totalAmount = typeFuels.stream()
-                        .map(Fuel::getAmount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                BigDecimal totalFuelValue = typeFuels.stream()
-                        .map(fuel -> fuel.getFuelPrice().multiply(fuel.getAmount()))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                BigDecimal averagePrice = totalFuelValue.divide(totalAmount, BigDecimal.ROUND_HALF_UP);
-
-                typeReports.put(type, new FuelReport(averagePrice, totalAmount, totalFuelValue));
-                monthTotalValue = monthTotalValue.add(totalFuelValue);
+            BigDecimal autonomy = BigDecimal.ZERO;
+            if (averageFuelPrice.compareTo(BigDecimal.ZERO) > 0 && typeTotalAmount.compareTo(BigDecimal.ZERO) > 0) {
+                autonomy = BigDecimal.valueOf(typeTotalKm)
+                        .divide(typeTotalAmount.divide(averageFuelPrice, 2, RoundingMode.HALF_UP), 2, RoundingMode.HALF_UP);
             }
 
-            fuelReports.put(month, typeReports.values().stream()
-                    .reduce((r1, r2) -> new FuelReport(
-                            r1.averagePrice().add(r2.averagePrice()).divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP),
-                            r1.totalAmount().add(r2.totalAmount()),
-                            r1.totalValue().add(r2.totalValue())
-                    )).orElse(new FuelReport(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)));
+            reports.add(new FuelReportDTO(type, averageFuelPrice, typeTotalAmount, typeTotalKm, autonomy));
 
-            totalValue = totalValue.add(monthTotalValue);
+            totalAmount = totalAmount.add(typeTotalAmount);
+            totalKm += typeTotalKm;
         }
-
-        return new ReportFuelDTO(
-                monthName != null ? "Relatório de Combustível de " + monthName + " " + year : "Relatório de Combustível de " + year,
-                fuelReports,
-                totalValue
-        );
+        return new FuelReportTotalsDTO(reports, totalAmount, totalKm);
     }
 }
-

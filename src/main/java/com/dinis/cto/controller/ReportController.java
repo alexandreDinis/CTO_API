@@ -3,7 +3,6 @@ package com.dinis.cto.controller;
 
 import com.dinis.cto.dto.car.ListMaintenanceCarDTO;
 import com.dinis.cto.dto.car.ListMaintenanceReportDTO;
-import com.dinis.cto.dto.car.ReportFuelDTO;
 import com.dinis.cto.dto.os.DateRangeDTO;
 import com.dinis.cto.dto.os.PaginatedResponseWithTotal;
 import com.dinis.cto.dto.os.ResponseOsFalseDTO;
@@ -99,15 +98,10 @@ public class ReportController {
         return ResponseEntity.ok(report);
     }
 
-    //Todo: o teste falhou o retorno esta no insominia
-    //relatorio de abastecimento
-
+    //relatorio de abastecimento por range de data
     @PostMapping("/fuel")
-    public ResponseEntity<ReportFuelDTO> getFuelReport(@RequestBody PeriodDTO periodDTO) {
-
-
-        ReportFuelDTO report = service.generateFuelReport(periodDTO.year(), periodDTO.month());
-
-        return ResponseEntity.ok(report);
+    public ResponseEntity<FuelReportTotalsDTO> getFuelReport(@RequestBody DateRangeDTO dateRangeDTO, @RequestParam Long userCarId) {
+        FuelReportTotalsDTO reportTotals = service.generateFuelReport(dateRangeDTO, userCarId);
+        return ResponseEntity.ok(reportTotals);
     }
 }

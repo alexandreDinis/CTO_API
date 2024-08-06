@@ -2,7 +2,7 @@ package com.dinis.cto.model.car;
 
 public enum TypeFuel {
 
-    ALCOOL,
+    ETANOL,
     GASOLINA,
     GNV,
     DISEL

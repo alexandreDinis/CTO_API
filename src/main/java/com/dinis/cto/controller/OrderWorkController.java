@@ -51,6 +51,7 @@ public class OrderWorkController {
         return ResponseEntity.ok(orderWork);
     }
 
+    //aplica desconto
     @PutMapping("{id}/discount")
     @Transactional
     public ResponseEntity<?> applyDiscount(@PathVariable Long id, @RequestBody DataOsDiscountDTO data) {
@@ -69,6 +70,7 @@ public class OrderWorkController {
         return ResponseEntity.noContent().build();
     }
 
+    //retorna a O.S de acordo com a placa do carro
     @PostMapping("search-plate")
     public ResponseEntity<List<DetailOsDTO>> getOrderWorksByClientAndCarPlate(@RequestBody ClientCarSearchDTO searchDTO) {
 

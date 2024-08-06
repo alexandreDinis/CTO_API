@@ -35,6 +35,8 @@ public class Fuel {
 
     private LocalDate date;
 
+    private boolean status;
+
     public Fuel(DataFuelDTO data, UserCar userCar) {
         this.userCar = userCar;
         this.type = data.typeFuel();

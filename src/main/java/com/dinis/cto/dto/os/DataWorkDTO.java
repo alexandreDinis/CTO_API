@@ -10,13 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public  record DataWorkDTO(
-        Long id,
-        String description,
-        @NotNull
-        @Valid
-        DataCarDTO car,
-        List<DataPartsDTO> parts,
+public  record DataWorkDTO(Long id, String description, @NotNull @Valid DataCarDTO car, List<DataPartsDTO> parts,
         BigDecimal value
 ) {
     public DataWorkDTO(Work work) {

@@ -90,19 +90,14 @@ public class OrderWorkService {
     public PaginatedResponseWithTotal<ResponseOsTrueDTO> listStatusTrue(Pageable pageable) {
         Page<OrderWork> orderWorks = orderWorkRepository.findByStatusTrue(pageable);
         Page<ResponseOsTrueDTO> responseOsTrueDTOPage = orderWorks.map(ResponseOsTrueDTO::new);
-
         BigDecimal totalValue = calculateTotalServiceValue(orderWorks.getContent());
-
-
         return new PaginatedResponseWithTotal<>(responseOsTrueDTOPage, totalValue);
     }
 
     public PaginatedResponseWithTotal<ResponseOsFalseDTO> listStatusFalse(Pageable pageable) {
         Page<OrderWork> orderWorks = orderWorkRepository.findByStatusFalse(pageable);
         Page<ResponseOsFalseDTO> responseOsFalseDTOPage = orderWorks.map(ResponseOsFalseDTO::new);
-
         BigDecimal totalValue = calculateTotalServiceValue(orderWorks.getContent());
-
         return new PaginatedResponseWithTotal<>(responseOsFalseDTOPage, totalValue);
     }
 
@@ -114,10 +109,9 @@ public class OrderWorkService {
             System.out.println("Work ID: " + work.getId());
             work.getParts().forEach(part -> System.out.println("Part ID: " + part.getId()));
         });
-
             return new DetailOsDTO(orderWork);
-
     }
+
     public void applyDiscount(Long id, DataOsDiscountDTO data) {
         OrderWork orderWork = orderWorkRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderWork not found with id: " + id));
@@ -154,7 +148,6 @@ public class OrderWorkService {
 
             orderWork.closeOs();
         }
-
     }
 
     public BigDecimal calculateTotalServiceValue(List<OrderWork> orderWorks) {
@@ -169,7 +162,6 @@ public class OrderWorkService {
         if (orderWorks.isEmpty()) {
             throw new EntityNotFoundException("Esse carro não consta no banco de dados");
         }
-
         return orderWorks.stream()
                 .map(DetailOsDTO::new)
                 .collect(Collectors.toList());

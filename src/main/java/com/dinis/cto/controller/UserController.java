@@ -29,25 +29,18 @@ public class UserController {
     @Autowired
     private TokenService tokenService;
 
-    //cadastra um usuario
+
     @PostMapping("/register")
     @Transactional
     public ResponseEntity<DataUserDTO> register(@RequestBody @Valid DataUserDTO data){
-
         service.regiter(data);
-
         return ResponseEntity.ok().build();
     }
 
-    //faz o login na conta
     @PostMapping("/login")
     public ResponseEntity<TokenJWT> login (@RequestBody @Valid AuthenticationDTO data) {
-
         var authentication = service.authentication(data);
-
         var token = tokenService.gerarToken((User) authentication.getPrincipal());
-
         return ResponseEntity.ok(new TokenJWT(token));
     }
-
 }

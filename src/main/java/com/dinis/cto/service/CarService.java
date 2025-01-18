@@ -14,16 +14,13 @@ public class CarService {
     @Autowired
     private UserCarRepository userCarRepository;
 
-
     public void registerUserCar(DataCarDTO data) {
 
         var userCar = new UserCar(data);
-
         userCarRepository.save(userCar);
     }
 
     public Page<DataCarDTO> userCarList(Pageable pageable) {
-
         return userCarRepository.findAll(pageable).map(DataCarDTO::new);
     }
 }

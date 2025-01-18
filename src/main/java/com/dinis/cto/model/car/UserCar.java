@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserCar extends Car {
+
     @OneToMany(mappedBy = "userCar", cascade = CascadeType.ALL)
     private List<Maintenance> maintenence;
 

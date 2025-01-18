@@ -1,6 +1,4 @@
 package com.dinis.cto.dto.report;
 
-public record ClientCarReportDTO(
-        long count
-) {
+public record ClientCarReportDTO(long count) {
 }

@@ -20,27 +20,22 @@ public class ClientController {
     @Autowired
     private ClientService service;
 
+
     @PostMapping("/register")
     @Transactional
     public ResponseEntity<DataClientDTO> register (@RequestBody @Valid DataClientDTO data) {
-
         service.register(data);
-
         return ResponseEntity.ok().build();
     }
 
-    // Tras a lista de clientes
     @GetMapping
     public Page<ClientSummary> list(Pageable pageable) {
         return service.list(pageable);
     }
 
-    // Tras o detalhe do cliente
     @GetMapping("{id}")
     public ResponseEntity<DataClientDTO> details(@PathVariable Long id) {
-
         var client = service.details(id);
-
         return ResponseEntity.ok(client);
     }
 }

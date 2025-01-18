@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Work {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,7 +35,6 @@ public class Work {
     private OrderWork orderWork;
 
     private String description;
-
     private BigDecimal value;
 
     public Work(DataWorkDTO data) {

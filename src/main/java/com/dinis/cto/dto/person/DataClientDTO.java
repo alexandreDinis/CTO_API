@@ -10,29 +10,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record DataClientDTO(
-
-         Long id,
-
-         @NotBlank
-         String fantasyName,
-         String corporateReason,
-
-         Boolean status,
-
-         @NotNull
-         @Valid
-         DataAddressDTO address,
-
-         String cpf,
-         String cnpj,
-
-         @NotNull
-         LocalDate createDate,
-
-         @NotNull
-         @Valid
-         List<DataContactDTO> contacts
+public record DataClientDTO(Long id, @NotBlank String fantasyName, String corporateReason, Boolean status,
+                            @NotNull @Valid DataAddressDTO address, String cpf, String cnpj,
+                            @NotNull LocalDate createDate,
+                            @NotNull @Valid List<DataContactDTO> contacts
 
 ) {public DataClientDTO(Client data) {
     this(data.getId(),

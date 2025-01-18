@@ -30,17 +30,13 @@ public class UserService implements UserDetailsService {
 
 
     public void regiter(DataUserDTO data) {
-
         var user = new User(data);
         user.setPassword(passwordEncoder.encode(data.password()));
-
         repository.save(user);
     }
 
     public Authentication authentication(AuthenticationDTO data) {
-
         var token = new UsernamePasswordAuthenticationToken(data.user(), data.password());
-
         return manager.authenticate(token);
     }
 

@@ -2,13 +2,10 @@ package com.dinis.cto.dto.report;
 
 import java.math.BigDecimal;
 
-public record FuelReportDTO(
-        String type,
-        BigDecimal averagePrice,
-        BigDecimal totalAmount,
-        Integer totalKm,
+public record FuelReportDTO(String type, BigDecimal averagePrice, BigDecimal totalAmount, Integer totalKm,
         BigDecimal autonomy
 ) {
+
     @Override
     public String toString() {
         return "Tipo: " + type + "\n" +
@@ -18,8 +15,7 @@ public record FuelReportDTO(
                 "Autonomia: " + autonomy;
     }
 
-    // Método separado para impressão no console (opcional)
     public void printReport() {
-        System.out.println(this); // Imprime a representação em string gerada pelo toString()
+        System.out.println(this);
     }
 }

@@ -16,30 +16,19 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "bearer-key")
 public class MaintenanceController {
 
-
     @Autowired
     private MaintenanceService service;
-
-
-    //Todo: testar
 
     @PostMapping("/open")
     @Transactional
     public ResponseEntity<?> openMaintenance(DataMaintenanceDTO data) {
-
         service.openMaintenance(data);
-
         return ResponseEntity.ok().build();
     }
-
-    //Todo: testar
-
     @DeleteMapping("{id}")
     @Transactional
     public ResponseEntity<ExistingMaintenanceDetailsDTO> doMaintenance(@PathVariable Long id, @RequestBody ExistingMaintenanceDetailsDTO data) {
-
         service.doMaintenance(id, data);
-
         return ResponseEntity.noContent().build();
     }
 }

@@ -27,18 +27,15 @@ public class MaintenanceService {
     private UserCarRepository userCarRepository;
 
     public void openMaintenance(DataMaintenanceDTO data) {
-
         var carOptional = userCarRepository.findById(data.carID());
 
         if (carOptional.isPresent()) {
-
             var car = carOptional.get();
             var maintenance = new Maintenance(data);
             maintenance.setUserCar(car);
             maintenanceRepository.save(maintenance);
             car.addMaintenance(maintenance);
             userCarRepository.save(car);
-
         }
     }
 

@@ -26,7 +26,6 @@ public class FuelService {
         if (userCarOptional.isPresent()) {
             var car = userCarOptional.get();
 
-            // Buscar o último abastecimento com status true
             Optional<Fuel> lastFuelOptional = fuelRepository.findFirstByUserCarIdAndStatusTrueOrderByDateDesc(data.carID());
 
             if (lastFuelOptional.isPresent()) {
@@ -46,16 +45,13 @@ public class FuelService {
 
             } else {
 
-                // Criar novo abastecimento
                 var fuel = new Fuel(data, car);
                 fuel.setStatus(true); // Novo abastecimento tem status true
                 fuelRepository.save(fuel);
                 car.addFuel(fuel);
                 car.updateTotalKm(data.km());
                 userCarRepository.save(car);
-
             }
-
 
         } else {
             throw new EntityNotFoundException("Carro não encontrado: " + data.carID());

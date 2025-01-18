@@ -10,6 +10,7 @@ import lombok.*;
 import java.util.List;
 
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
 @Getter
@@ -28,7 +29,6 @@ public class ClientCar extends Car {
         super(data.car().make(), data.car().model(), data.car().plate(), data.car().year(),
                 data.car().initialKm(), data.car().createDate());
     }
-
 
     public ClientCar(DataCarDTO car) {
         super(car.make(), car.model(),  car.plate(),car.year(), car.initialKm(), car.createDate());

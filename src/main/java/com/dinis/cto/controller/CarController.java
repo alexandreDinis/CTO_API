@@ -19,16 +19,13 @@ public class CarController {
     @Autowired
     private CarService service;
 
-    //cadastra um carro de usuario
     @PostMapping("/register/user")
     @Transactional
     public ResponseEntity<DataCarDTO> register(@RequestBody @Valid DataCarDTO data) {
-
         service.registerUserCar(data);
-
         return ResponseEntity.ok().build();
     }
-    //tras a lista de carros de usuarios
+
     @GetMapping
     public Page<DataCarDTO> userCarList(Pageable pageable) {
         return service.userCarList(pageable);

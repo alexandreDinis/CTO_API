@@ -8,18 +8,10 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record DataContactDTO(
-                             @NotBlank
-                             String name,
+public record DataContactDTO(@NotBlank String name, String department, @NotNull List<DataPhoneDTO> phones,
+                             @NotBlank @Email String email) {
 
-                             String department,
 
-                             @NotNull
-                             List<DataPhoneDTO> phones,
-
-                             @NotBlank
-                             @Email
-                             String email) {
     public DataContactDTO(Contact contact) {
         this(contact.getName(),
                 contact.getDepartment(),

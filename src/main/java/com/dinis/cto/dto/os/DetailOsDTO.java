@@ -9,16 +9,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record DetailOsDTO(
-        Long id,
-        BudgetEnum budget,
-        LocalDate createDate,
-        Boolean status,
-        ClientSummary client,
-        List<DataWorkDTO> works,
-        BigDecimal serviceValue,
-        BigDecimal discountValue,
-        BigDecimal discountPercentage,
+public record DetailOsDTO(Long id, BudgetEnum budget, LocalDate createDate, Boolean status, ClientSummary client,
+        List<DataWorkDTO> works, BigDecimal serviceValue, BigDecimal discountValue, BigDecimal discountPercentage,
         BigDecimal valueTotal
 ) {
     public DetailOsDTO(OrderWork orderWork) {

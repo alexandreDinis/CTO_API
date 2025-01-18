@@ -57,7 +57,6 @@ public class ReportService {
                 .collect(Collectors.toList());
 
         BigDecimal totalValue = service.calculateTotalServiceValue(orderWorks);
-
         return new PaginatedResponseWithTotal<>(responseOsFalseDTOList, totalValue);
     }
 
@@ -77,17 +76,14 @@ public class ReportService {
                 .map(Parts::getValue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal averageValue = parts.isEmpty() ? BigDecimal.ZERO : totalValue.divide(new BigDecimal(parts.size()), RoundingMode.HALF_UP);
-
         return new ReportDataDTO(quantity, totalValue, averageValue);
     }
-
 
     public ClientCarReportDTO generateClientCarReport(PeriodDTO periodDTO) {
         Integer year = periodDTO.year();
         Integer month = periodDTO.month();
 
         long count = clientCarRepository.countClientCarsByYearAndMonth(year, month);
-
         return new ClientCarReportDTO(count);
     }
 
@@ -96,7 +92,6 @@ public class ReportService {
         Integer month = periodDTO.month();
 
         long clientCount = orderWorkRepository.countDistinctClientsByYearAndMonth(year, month);
-
         return new ClientAttendanceReportDTO(clientCount);
     }
 
@@ -109,13 +104,10 @@ public class ReportService {
         }
 
         if (month != null) {
-            // Caso ano e mês sejam fornecidos
             results = orderWorkRepository.findTotalValueByClientAndMonth(year, month);
         } else {
-            // Caso apenas o ano seja fornecido
             results = orderWorkRepository.findTotalValueByClientAndYear(year);
         }
-
         return results.stream()
                 .map(result -> new ClientRankingDTO(
                         (String) result.get("fantasyName"),
@@ -125,14 +117,10 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
-    // Compara o valor total de os de um ano para outro
     public MonthlyComparisonReportDTO generateMonthlyComparisonReport(int year1, int year2) {
-
-        // Obter os dados dos dois anos
         Map<Month, BigDecimal> year1TotalsByMonth = getTotalsByMonthForYear(year1);
         Map<Month, BigDecimal> year2TotalsByMonth = getTotalsByMonthForYear(year2);
 
-        // Calcular balanço e porcentagem
         List<MonthlyComparisonDTO> monthlyComparisons = new ArrayList<>();
         for (Month month : Month.values()) {
             BigDecimal year1Total = year1TotalsByMonth.getOrDefault(month, BigDecimal.ZERO);
@@ -150,8 +138,6 @@ public class ReportService {
                     percentage
             ));
         }
-
-        // Calcular totais anuais
         BigDecimal totalYear1 = year1TotalsByMonth.values().stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalYear2 = year2TotalsByMonth.values().stream()
@@ -159,8 +145,8 @@ public class ReportService {
         BigDecimal totalBalance = totalYear2.subtract(totalYear1);
         BigDecimal totalPercentage = totalYear1.equals(BigDecimal.ZERO) ?
                 BigDecimal.ZERO :
-                totalBalance.multiply(BigDecimal.valueOf(100)).divide(totalYear1, RoundingMode.HALF_UP);
 
+                totalBalance.multiply(BigDecimal.valueOf(100)).divide(totalYear1, RoundingMode.HALF_UP);
         return new MonthlyComparisonReportDTO(
                 monthlyComparisons,
                 totalYear1,
@@ -173,7 +159,6 @@ public class ReportService {
     private Map<Month, BigDecimal> getTotalsByMonthForYear(int year) {
         List<OrderWork> closedOrderWorks = orderWorkRepository.findClosedOrderWorksByYear(year);
 
-        // Agrupar OrderWork por mês e calcular os totais para o ano especificado
         return closedOrderWorks.stream()
                 .filter(orderWork -> orderWork.getCreateDate().getYear() == year)
                 .collect(Collectors.groupingBy(
@@ -216,7 +201,6 @@ public class ReportService {
         } else {
             maintenancesPage = maintenanceRepository.findByStatusFalse(pageable);
         }
-
         Page<ListMaintenanceCarDTO> maintenanceCarPage = maintenancesPage.map(maintenance -> {
             var car = maintenance.getUserCar();
             List<MaintenanceDTO> maintenanceDTOs = car.getMaintenence().stream()

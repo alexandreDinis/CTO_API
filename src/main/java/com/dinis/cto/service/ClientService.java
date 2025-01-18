@@ -19,7 +19,6 @@ public class ClientService {
 
 
     public void register(DataClientDTO data) {
-
         var client = new Client(data);
         client.setStatus(true);
         repository.save(client);
@@ -34,7 +33,6 @@ public class ClientService {
     }
 
     public DataClientDTO details(Long id) {
-
         var client = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Não há cliente com esse id "+ id+ " em nosso banco de dados." ));
         return new DataClientDTO(client);

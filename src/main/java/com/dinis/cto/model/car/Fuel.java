@@ -28,13 +28,9 @@ public class Fuel {
     private TypeFuel type;
 
     private BigDecimal fuelPrice;
-
     private BigDecimal amount;
-
     private int km;
-
     private LocalDate date;
-
     private boolean status;
 
     public Fuel(DataFuelDTO data, UserCar userCar) {

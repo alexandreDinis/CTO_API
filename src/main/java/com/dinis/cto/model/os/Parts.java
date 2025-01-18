@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Parts {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

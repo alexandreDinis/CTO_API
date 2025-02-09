@@ -25,6 +25,7 @@ public class Contact {
     @JoinColumn(name = "contact_id")
     private List<Phone> phones = new ArrayList<>();
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     @ManyToMany(mappedBy = "contacts")

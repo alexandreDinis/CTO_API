@@ -16,7 +16,8 @@ public record DataUserDTO(@NotNull @Valid DataContactDTO contact,
                           @Valid @NotNull DataAddressDTO address,
 
                           @NotBlank @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#\\$%\\^&\\*])(?=\\S+$).{8,}$",
-                          message = "A senha deve ter no mínimo 8 caracteres, com pelo menos uma letra maiúscula," + " uma letra minúscula, um número e um caractere especial") String password,
+                          message = "A senha deve ter no mínimo 8 caracteres, com pelo menos uma letra maiúscula," + " uma letra minúscula, um número e um caractere especial") String password
 
-                          @NotNull LocalDate createDate) {
+                          ) {
 }
+//@NotNull LocalDate createDate

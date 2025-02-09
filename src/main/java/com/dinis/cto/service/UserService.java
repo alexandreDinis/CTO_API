@@ -33,8 +33,14 @@ public class UserService implements UserDetailsService {
 
 
     public void regiter(DataUserDTO data) {
-        var user = new User(data);
 
+        UserDetails existingUser = repository.findByContactEmail(data.contact().email());
+
+        if(existingUser != null) {
+            throw new IllegalArgumentException("E-mail já cadastrado!");
+        }
+
+        var user = new User(data);
         user.setCreateDate(LocalDate.now());
         user.setPassword(passwordEncoder.encode(data.password()));
         repository.save(user);

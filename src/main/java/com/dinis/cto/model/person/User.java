@@ -41,7 +41,6 @@ public class User implements UserDetails {
     public User(DataUserDTO data) {
         this.contact = new Contact(data.contact());
         this.address = new Address(data.address());
-        this.createDate = data.createDate();
         this.cpf = data.cpf();
         this.dateBirth = data.dateBirth();
     }

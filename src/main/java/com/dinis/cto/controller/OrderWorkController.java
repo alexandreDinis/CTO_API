@@ -27,7 +27,6 @@ public class OrderWorkController {
     public ResponseEntity<DataOrderWorkDTO> openOS(@RequestBody @Valid DataOrderWorkDTO data){
 
         service.openOS(data);
-
         return ResponseEntity.ok().build();
     }
 
@@ -51,13 +50,11 @@ public class OrderWorkController {
         return ResponseEntity.ok(orderWork);
     }
 
-    //aplica desconto
     @PutMapping("{id}/discount")
     @Transactional
     public ResponseEntity<?> applyDiscount(@PathVariable Long id, @RequestBody DataOsDiscountDTO data) {
 
         service.applyDiscount(id, data);
-
         return ResponseEntity.ok().build();
     }
 
@@ -66,11 +63,9 @@ public class OrderWorkController {
     public ResponseEntity<?> closeOs (@PathVariable Long id) {
 
         service.closeOs(id);
-
         return ResponseEntity.noContent().build();
     }
 
-    //retorna a O.S de acordo com a placa do carro
     @PostMapping("search-plate")
     public ResponseEntity<List<DetailOsDTO>> getOrderWorksByClientAndCarPlate(@RequestBody ClientCarSearchDTO searchDTO) {
 

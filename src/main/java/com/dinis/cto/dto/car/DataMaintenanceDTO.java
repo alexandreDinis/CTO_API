@@ -23,7 +23,7 @@ public record DataMaintenanceDTO(
         @NotNull
         int initKm,
 
-        @NotNull
+        //todo: se for maior que 0, emitir alerta.
         int durationKm
 ) {
 }

@@ -29,13 +29,11 @@ public class ClientController {
         return ResponseEntity.ok().build();
     }
 
-    // Tras a lista de clientes
     @GetMapping
     public Page<ClientSummary> list(Pageable pageable) {
         return service.list(pageable);
     }
 
-    // Tras o detalhe do cliente
     @GetMapping("{id}")
     public ResponseEntity<DataClientDTO> details(@PathVariable Long id) {
 

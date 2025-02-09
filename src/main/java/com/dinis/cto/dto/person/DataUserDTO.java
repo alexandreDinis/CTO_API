@@ -34,8 +34,7 @@ public record DataUserDTO(
                 message = "A senha deve ter no mínimo 8 caracteres, com pelo menos uma letra maiúscula," +
                         " uma letra minúscula, um número e um caractere especial"
         )
-        String password,
+        String password
 
-        @NotNull
-        LocalDate createDate) {
+        ) {
 }

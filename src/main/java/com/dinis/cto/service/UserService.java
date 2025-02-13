@@ -1,7 +1,6 @@
 package com.dinis.cto.service;
 
 import com.dinis.cto.dto.person.*;
-import com.dinis.cto.dto.report.FirstNameDTO;
 import com.dinis.cto.infra.security.TokenService;
 import com.dinis.cto.model.person.Address;
 import com.dinis.cto.model.person.Contact;
@@ -10,7 +9,9 @@ import com.dinis.cto.model.person.User;
 import com.dinis.cto.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -134,6 +135,38 @@ public class UserService implements UserDetailsService {
         // Salvar o usuário com a nova senha
         return repository.save(user);
     }
+
+//    // Método para enviar o e-mail de confirmação de cadastro
+//    public void sendConfirmationEmail(String email) {
+//        // Verificar se o e-mail já está cadastrado
+//        UserDetails existingUser = repository.findByContactEmail(email);
+//        if (existingUser != null) {
+//            throw new IllegalArgumentException("E-mail já cadastrado!");
+//        }
+//
+//        // Criar um usuário temporário para gerar o token
+//        User tempUser = new User();
+//        tempUser.getContact().setEmail(email);
+//
+//        // Gerar token usando o método existente
+//        String token = tokenService.gerarToken(tempUser);
+//
+//        // Criar e enviar o e-mail com o link de confirmação contendo o token
+//        SimpleMailMessage message = new SimpleMailMessage();
+//        message.setTo(email);
+//        message.setSubject("Confirmação de Cadastro");
+//        message.setText("Clique no link abaixo para confirmar seu cadastro:\n\n"
+//                + "http://localhost:8080/confirm?token=" + token);
+//
+//        // Obtém o email do remetente da configuração do JavaMailSender
+//        String remetente = ((JavaMailSenderImpl) mailSender).getUsername();
+//        message.setFrom(remetente); // Use o email da conta de serviço
+//
+//        // Enviar o e-mail
+//        mailSender.send(message);
+//    }
+
+
 
 }
 

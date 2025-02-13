@@ -1,9 +1,6 @@
 package com.dinis.cto.controller;
 
-import com.dinis.cto.dto.person.AuthenticationDTO;
-import com.dinis.cto.dto.person.DataPasswordUpdateDTO;
-import com.dinis.cto.dto.person.DataUserDTO;
-import com.dinis.cto.dto.person.DataUserUpdateDTO;
+import com.dinis.cto.dto.person.*;
 import com.dinis.cto.infra.security.TokenJWT;
 import com.dinis.cto.infra.security.TokenService;
 import com.dinis.cto.model.person.User;
@@ -13,6 +10,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,4 +57,15 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+//    // Endpoint para enviar o e-mail de confirmação de cadastro
+//    @PostMapping("/send-confirmation-email")
+//    public ResponseEntity<Void> sendConfirmationEmail(@RequestBody @Valid EmailDTO data) {
+//        try {
+//            service.sendConfirmationEmail(data.email());
+//            return ResponseEntity.ok().build();
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().build(); // Retorna 400 se o e-mail já estiver cadastrado
+//        }
+//    }
 }

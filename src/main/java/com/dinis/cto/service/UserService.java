@@ -1,17 +1,16 @@
 package com.dinis.cto.service;
 
 import com.dinis.cto.dto.person.*;
+import com.dinis.cto.infra.MailConfig.EmailService;
 import com.dinis.cto.infra.security.TokenService;
 import com.dinis.cto.model.person.Address;
 import com.dinis.cto.model.person.Contact;
 import com.dinis.cto.model.person.Phone;
 import com.dinis.cto.model.person.User;
 import com.dinis.cto.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,8 +19,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +40,7 @@ public class UserService implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JavaMailSender mailSender;
+    private EmailService emailService;
 
     @Autowired
     private TokenService tokenService;
@@ -56,6 +58,11 @@ public class UserService implements UserDetailsService {
         user.setCreateDate(LocalDate.now());
         user.setPassword(passwordEncoder.encode(data.password()));
         repository.save(user);
+
+        //todo: enviar email para verificar conta - criar logica de confirmação.
+        emailService.enviarEmail(user.getUsername(),
+                "Seja Bem vindo ao cto-app",
+                "Voce esta recebendo o email de cadastro");
     }
 
     public Authentication authentication(AuthenticationDTO data) {
@@ -68,45 +75,83 @@ public class UserService implements UserDetailsService {
         return repository.findByContactEmail(username);
     }
 
-    //todo:Testar e criar
-    public User updateUser(Long userId, DataUserUpdateDTO data) {
+    //todo: quando ele atualiza a descricção do phone se tiver appenas um item ele apga o outro e preench com null
+    public DataUserDTO updateUser(Long userId, DataUserUpdateDTO data) {
         User user = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        // Atualizando o contato
-        Contact contact = user.getContact();
+        boolean hasChanges = false;
+
+        // Atualiza CPF
+        hasChanges |= updateField(data.cpf(), user::getCpf, user::setCpf);
+
+        // Atualiza contato
         if (data.contact() != null) {
-            contact.setName(data.contact().name());
-            contact.setDepartment(data.contact().department());
-            contact.setEmail(data.contact().email()); // Validar se o email já está em uso
-            contact.setPhones(data.contact().phones().stream()
-                    .map(phoneDTO -> new Phone(phoneDTO.number(), phoneDTO.description()))
-                    .collect(Collectors.toList()));
+            if (user.getContact() == null) {
+                user.setContact(new Contact());
+                hasChanges = true;
+            }
+
+            Contact contact = user.getContact();
+            hasChanges |= updateField(data.contact().name(), contact::getName, contact::setName);
+            hasChanges |= updateField(data.contact().email(), contact::getEmail, contact::setEmail);
+            hasChanges |= updateField(data.contact().department(), contact::getDepartment, contact::setDepartment);
+
+            // Atualiza telefones mantendo os IDs
+            if (data.contact().phones() != null) {
+                Map<Long, Phone> existingPhones = contact.getPhones().stream()
+                        .collect(Collectors.toMap(Phone::getId, phone -> phone));
+
+                for (DataPhoneDTO phoneDTO : data.contact().phones()) {
+                    if (phoneDTO.id() != null && existingPhones.containsKey(phoneDTO.id())) {
+                        // Atualiza telefone existente
+                        Phone phone = existingPhones.get(phoneDTO.id());
+                        hasChanges |= updateField(phoneDTO.number(), phone::getNumber, phone::setNumber);
+                        hasChanges |= updateField(phoneDTO.description(), phone::getDescription, phone::setDescription);
+                    } else {
+                        // Adiciona novo telefone se necessário
+                        if (phoneDTO.number() != null && phoneDTO.description() != null) {
+                            Phone newPhone = new Phone(phoneDTO.number(), phoneDTO.description());
+                            contact.getPhones().add(newPhone);
+                            hasChanges = true;
+                        }
+                    }
+                }
+            }
         }
 
-        // Atualizando o endereço
+        // Atualiza endereço
         if (data.address() != null) {
+            if (user.getAddress() == null) {
+                user.setAddress(new Address());
+                hasChanges = true;
+            }
+
             Address address = user.getAddress();
-            address.setStreet(data.address().street());
-            address.setNumber(data.address().number());
-            address.setNeighborhood(data.address().neighborhood());
-            address.setCity(data.address().city());
-            address.setState(data.address().state());
-            address.setZipCode(data.address().zipCode());
-            address.setComplement(data.address().complement());
+            hasChanges |= updateField(data.address().street(), address::getStreet, address::setStreet);
+            hasChanges |= updateField(data.address().city(), address::getCity, address::setCity);
+            hasChanges |= updateField(data.address().number(), address::getNumber, address::setNumber);
+            hasChanges |= updateField(data.address().complement(), address::getComplement, address::setComplement);
+            hasChanges |= updateField(data.address().neighborhood(), address::getNeighborhood, address::setNeighborhood);
+            hasChanges |= updateField(data.address().state(), address::getState, address::setState);
+            hasChanges |= updateField(data.address().zipCode(), address::getZipCode, address::setZipCode);
         }
 
-        // Atualizando o CPF e a data de nascimento
-        if (data.cpf() != null) {
-            user.setCpf(data.cpf());
-        }
-        if (data.dateBirth() != null) {
-            user.setDateBirth(data.dateBirth());
-        }
-
-        // Salvando o usuário com os dados atualizados
-        return repository.save(user);
+        // Retorna DTO atualizado apenas se houve mudanças
+        return hasChanges ? new DataUserDTO(repository.save(user)) : new DataUserDTO(user);
     }
+
+    // Método auxiliar genérico para atualizar campos
+    private <T> boolean updateField(T newValue, Supplier<T> getter, Consumer<T> setter) {
+        if (newValue != null && !newValue.equals(getter.get())) {
+            setter.accept(newValue);
+            return true;
+        }
+        return false;
+    }
+
+
+
 
     //todo: testar
     public User updatePassword(Long userId, DataPasswordUpdateDTO data) {
@@ -135,6 +180,8 @@ public class UserService implements UserDetailsService {
         // Salvar o usuário com a nova senha
         return repository.save(user);
     }
+
+
 
 //    // Método para enviar o e-mail de confirmação de cadastro
 //    public void sendConfirmationEmail(String email) {

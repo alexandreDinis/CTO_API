@@ -1,6 +1,7 @@
 package com.dinis.cto.controller;
 
 import com.dinis.cto.dto.person.*;
+import com.dinis.cto.infra.security.RateLimiterService;
 import com.dinis.cto.infra.security.SecurityUtils;
 import com.dinis.cto.infra.security.TokenJWT;
 import com.dinis.cto.infra.security.TokenService;
@@ -9,12 +10,15 @@ import com.dinis.cto.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+
 
 @RestController
 @RequestMapping("user")
@@ -28,10 +32,13 @@ public class UserController {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private RateLimiterService rateLimiterService;
+
 
     @PostMapping("/register")
     @Transactional
-    public ResponseEntity<DataUserDTO> register(@RequestBody @Valid DataUserDTO data){
+    public ResponseEntity<DataUserDTO> register(@RequestBody @Valid DataUserDTO data) {
         service.regiter(data);
         return ResponseEntity.ok().build();
     }
@@ -48,11 +55,16 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenJWT> login (@RequestBody @Valid AuthenticationDTO data) {
-        var authentication = service.authentication(data);
-        var token = tokenService.gerarToken((User) authentication.getPrincipal());
-        return ResponseEntity.ok(new TokenJWT(token));
+    public ResponseEntity<?> login(@RequestBody @Valid AuthenticationDTO data) {
+        try {
+            Authentication authentication = service.authentication(data);
+            var token = tokenService.gerarToken((User) authentication.getPrincipal());
+            return ResponseEntity.ok(new TokenJWT(token));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(e.getMessage());
+        }
     }
+
     //todo:testar Nesse passo eu pretendo implementar no front um botao alterar
     @PutMapping("/update-password")
     public ResponseEntity<String> updatePassword(HttpServletRequest request, @RequestBody DataPasswordUpdateDTO data) {
@@ -63,15 +75,4 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-//    // Endpoint para enviar o e-mail de confirmação de cadastro
-//    @PostMapping("/send-confirmation-email")
-//    public ResponseEntity<Void> sendConfirmationEmail(@RequestBody @Valid EmailDTO data) {
-//        try {
-//            service.sendConfirmationEmail(data.email());
-//            return ResponseEntity.ok().build();
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().build(); // Retorna 400 se o e-mail já estiver cadastrado
-//        }
-//    }
 }

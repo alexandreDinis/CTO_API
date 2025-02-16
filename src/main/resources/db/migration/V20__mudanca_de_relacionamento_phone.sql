@@ -1,0 +1,1 @@
+ALTER TABLE phone ADD CONSTRAINT fk_contact FOREIGN KEY (contact_id) REFERENCES contact(id);

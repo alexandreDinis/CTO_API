@@ -8,7 +8,7 @@ import com.dinis.cto.model.person.Contact;
 import com.dinis.cto.model.person.Phone;
 import com.dinis.cto.model.person.User;
 import com.dinis.cto.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,9 +20,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,7 +52,11 @@ public class UserService implements UserDetailsService {
             throw new IllegalArgumentException("E-mail já cadastrado!");
         }
 
+        LocalDate dateBirth = convertToDatabaseDateFormat(data.dateBirth());
+
+
         var user = new User(data);
+        user.setDateBirth(String.valueOf(dateBirth));
         user.setCreateDate(LocalDate.now());
         user.setPassword(passwordEncoder.encode(data.password()));
         repository.save(user);
@@ -62,6 +65,12 @@ public class UserService implements UserDetailsService {
         emailService.enviarEmail(user.getUsername(),
                 "Seja Bem vindo ao cto-app",
                 "Voce esta recebendo o email de cadastro");
+    }
+
+    // Função para converter a data do formato brasileiro para LocalDate (formato aceito pelo banco)
+    private LocalDate convertToDatabaseDateFormat(String dateBirth) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return LocalDate.parse(dateBirth, formatter);
     }
 
     public Authentication authentication(AuthenticationDTO data) {
@@ -74,82 +83,97 @@ public class UserService implements UserDetailsService {
         return repository.findByContactEmail(username);
     }
 
-    //todo: quando ele atualiza a descricção do phone se tiver appenas um item ele apga o outro e preench com null
-    public DataUserDTO updateUser(Long userId, DataUserUpdateDTO data) {
+    //todo: Testar
+    @Transactional
+    public DataUserDTO updateUser(Long userId, DataUserUpdateDTO updateData) {
+        // Busca o usuário existente
         User user = repository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        boolean hasChanges = false;
+        // Atualiza os campos básicos do usuário
+        if (updateData.cpf() != null) {
+            user.setCpf(updateData.cpf());
+        }
+        if (updateData.dateBirth() != null) {
+            user.setDateBirth(updateData.dateBirth());
+        }
 
-        // Atualiza CPF
-        hasChanges |= updateField(data.cpf(), user::getCpf, user::setCpf);
+        // Atualiza o contato (se fornecido)
+        if (updateData.contact() != null) {
+            updateContact(user.getContact(), updateData.contact());
+        }
 
-        // Atualiza contato
-        if (data.contact() != null) {
-            if (user.getContact() == null) {
-                user.setContact(new Contact());
-                hasChanges = true;
-            }
+        // Atualiza o endereço (se fornecido)
+        if (updateData.address() != null) {
+            updateAddress(user.getAddress(), updateData.address());
+        }
 
-            Contact contact = user.getContact();
-            hasChanges |= updateField(data.contact().name(), contact::getName, contact::setName);
-            hasChanges |= updateField(data.contact().email(), contact::getEmail, contact::setEmail);
-            hasChanges |= updateField(data.contact().department(), contact::getDepartment, contact::setDepartment);
+        // Salva o usuário (e todas as entidades relacionadas devido ao cascade)
+        repository.save(user);
 
-            // Atualiza telefones mantendo os IDs
-            if (data.contact().phones() != null) {
-                Map<Long, Phone> existingPhones = contact.getPhones().stream()
-                        .collect(Collectors.toMap(Phone::getId, phone -> phone));
+        return new DataUserDTO(user);
+    }
 
-                for (DataPhoneDTO phoneDTO : data.contact().phones()) {
-                    if (phoneDTO.id() != null && existingPhones.containsKey(phoneDTO.id())) {
-                        // Atualiza telefone existente
-                        Phone phone = existingPhones.get(phoneDTO.id());
-                        hasChanges |= updateField(phoneDTO.number(), phone::getNumber, phone::setNumber);
-                        hasChanges |= updateField(phoneDTO.description(), phone::getDescription, phone::setDescription);
-                    } else {
-                        // Adiciona novo telefone se necessário
-                        if (phoneDTO.number() != null && phoneDTO.description() != null) {
-                            Phone newPhone = new Phone(phoneDTO.number(), phoneDTO.description());
-                            contact.getPhones().add(newPhone);
-                            hasChanges = true;
-                        }
-                    }
+    private void updateContact(Contact contact, DataContactDTO contactData) {
+        if (contactData.name() != null) {
+            contact.setName(contactData.name());
+        }
+        if (contactData.department() != null) {
+            contact.setDepartment(contactData.department());
+        }
+        if (contactData.email() != null) {
+            contact.setEmail(contactData.email());
+        }
+
+        // Atualiza os telefones (se fornecido)
+        if (contactData.phones() != null) {
+            // Mapa para rastrear telefones existentes pelo número
+            Map<String, Phone> existingPhones = contact.getPhones().stream()
+                    .collect(Collectors.toMap(Phone::getNumber, phone -> phone));
+
+            // Limpa a lista temporariamente para evitar duplicatas
+            contact.getPhones().clear();
+
+            // Itera sobre os telefones fornecidos no DTO
+            for (DataPhoneDTO phoneData : contactData.phones()) {
+                Phone phone = existingPhones.get(phoneData.number());
+                if (phone != null) {
+                    // Atualiza o telefone existente
+                    phone.setDescription(phoneData.description());
+                    phone.setNumber(phoneData.number());
+                } else {
+                    // Cria um novo telefone se não existir
+                    phone = new Phone(phoneData.number(), phoneData.description());
                 }
+                contact.getPhones().add(phone); // Adiciona o telefone à lista do Contact
             }
         }
-
-        // Atualiza endereço
-        if (data.address() != null) {
-            if (user.getAddress() == null) {
-                user.setAddress(new Address());
-                hasChanges = true;
-            }
-
-            Address address = user.getAddress();
-            hasChanges |= updateField(data.address().street(), address::getStreet, address::setStreet);
-            hasChanges |= updateField(data.address().city(), address::getCity, address::setCity);
-            hasChanges |= updateField(data.address().number(), address::getNumber, address::setNumber);
-            hasChanges |= updateField(data.address().complement(), address::getComplement, address::setComplement);
-            hasChanges |= updateField(data.address().neighborhood(), address::getNeighborhood, address::setNeighborhood);
-            hasChanges |= updateField(data.address().state(), address::getState, address::setState);
-            hasChanges |= updateField(data.address().zipCode(), address::getZipCode, address::setZipCode);
-        }
-
-        // Retorna DTO atualizado apenas se houve mudanças
-        return hasChanges ? new DataUserDTO(repository.save(user)) : new DataUserDTO(user);
-    }
-
-    // Método auxiliar genérico para atualizar campos
-    private <T> boolean updateField(T newValue, Supplier<T> getter, Consumer<T> setter) {
-        if (newValue != null && !newValue.equals(getter.get())) {
-            setter.accept(newValue);
-            return true;
-        }
-        return false;
     }
 
 
+    private void updateAddress(Address address, DataAddressDTO addressData) {
+        if (addressData.street() != null) {
+            address.setStreet(addressData.street());
+        }
+        if (addressData.number() != null) {
+            address.setNumber(addressData.number());
+        }
+        if (addressData.neighborhood() != null) {
+            address.setNeighborhood(addressData.neighborhood());
+        }
+        if (addressData.city() != null) {
+            address.setCity(addressData.city());
+        }
+        if (addressData.state() != null) {
+            address.setState(addressData.state());
+        }
+        if (addressData.zipCode() != null) {
+            address.setZipCode(addressData.zipCode());
+        }
+        if (addressData.complement() != null) {
+            address.setComplement(addressData.complement());
+        }
+    }
 
 
     //todo: testar

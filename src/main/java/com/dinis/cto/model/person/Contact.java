@@ -22,7 +22,7 @@ public class Contact {
     private String department;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "contact_id")
+    @JoinColumn(name = "contact_id") // Define a coluna de chave estrangeira na tabela Phone
     private List<Phone> phones = new ArrayList<>();
 
     @Column(unique = true, nullable = false)
@@ -39,5 +39,6 @@ public class Contact {
                 .collect(Collectors.toList());
         this.email = data.email();
     }
-}
+
+   }
 

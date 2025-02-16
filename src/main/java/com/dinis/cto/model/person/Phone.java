@@ -1,8 +1,5 @@
 package com.dinis.cto.model.person;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 
@@ -18,6 +15,10 @@ public class Phone {
 
     private String description;
     private String number;
+
+    @ManyToOne
+    @JoinColumn(name = "contact_id")  // Chave estrangeira na tabela phone
+    private Contact contact;
 
     public Phone(String number, String description) {
         this.number = number;

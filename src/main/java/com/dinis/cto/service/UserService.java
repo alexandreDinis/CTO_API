@@ -2,6 +2,7 @@ package com.dinis.cto.service;
 
 import com.dinis.cto.dto.person.*;
 import com.dinis.cto.infra.MailConfig.EmailService;
+import com.dinis.cto.infra.security.RateLimiterService;
 import com.dinis.cto.infra.security.SecurityUtils;
 import com.dinis.cto.infra.security.TokenService;
 import com.dinis.cto.model.person.Address;
@@ -21,6 +22,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import javax.naming.AuthenticationException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -44,6 +47,9 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private TokenService tokenService;
+
+    @Autowired
+    private RateLimiterService rateLimiterService;
 
 
     public void regiter(DataUserDTO data) {
@@ -76,8 +82,22 @@ public class UserService implements UserDetailsService {
     }
 
     public Authentication authentication(AuthenticationDTO data) {
-        var token = new UsernamePasswordAuthenticationToken(data.user(), data.password());
-        return manager.authenticate(token);
+        String username = data.user();
+
+        // Verifica se o usuário pode tentar fazer login
+        if (!rateLimiterService.allowLoginAttempt(username)) {
+            throw new RuntimeException("Too many login attempts. Please wait 20 seconds.");
+        }
+
+        try {
+            var token = new UsernamePasswordAuthenticationToken(data.user(), data.password());
+            Authentication authentication = manager.authenticate(token);
+            rateLimiterService.resetLoginAttempts(username); // Resetar as tentativas após login bem-sucedido
+            return authentication;
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            // Captura a exceção específica do Spring Security
+            throw new RuntimeException("Authentication failed: " + e.getMessage(), e);
+        }
     }
 
     @Override

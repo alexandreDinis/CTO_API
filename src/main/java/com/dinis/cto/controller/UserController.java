@@ -1,10 +1,12 @@
 package com.dinis.cto.controller;
 
 import com.dinis.cto.dto.person.*;
+import com.dinis.cto.infra.security.SecurityUtils;
 import com.dinis.cto.infra.security.TokenJWT;
 import com.dinis.cto.infra.security.TokenService;
 import com.dinis.cto.model.person.User;
 import com.dinis.cto.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -34,10 +36,14 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    //todo:testar emplementada em 09-02-2025
-    @PutMapping("/{id}")
-    public ResponseEntity<DataUserDTO> updateUser(@PathVariable Long id, @RequestBody DataUserUpdateDTO data) {
-        DataUserDTO updatedUser = service.updateUser(id, data);
+    @PutMapping("/update")
+    public ResponseEntity<DataUserDTO> updateUser(HttpServletRequest request, @RequestBody DataUserUpdateDTO data) {
+        // Obter o usuário autenticado para pegar o ID
+        User authenticatedUser = SecurityUtils.authenticateAndGetUser(request);
+
+        // Chamar o método de atualização passando o ID do usuário
+        DataUserDTO updatedUser = service.updateUser(request, authenticatedUser.getId(), data);
+
         return ResponseEntity.ok(updatedUser);
     }
 
@@ -48,10 +54,10 @@ public class UserController {
         return ResponseEntity.ok(new TokenJWT(token));
     }
     //todo:testar Nesse passo eu pretendo implementar no front um botao alterar
-    @PutMapping("/{id}/password")
-    public ResponseEntity<String> updatePassword(@PathVariable Long id, @RequestBody DataPasswordUpdateDTO data) {
+    @PutMapping("/update-password")
+    public ResponseEntity<String> updatePassword(HttpServletRequest request, @RequestBody DataPasswordUpdateDTO data) {
         try {
-            service.updatePassword(id, data);
+            service.updatePassword(request, data);
             return ResponseEntity.ok("Senha alterada com sucesso!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

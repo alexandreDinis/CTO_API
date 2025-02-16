@@ -2,12 +2,14 @@ package com.dinis.cto.service;
 
 import com.dinis.cto.dto.person.*;
 import com.dinis.cto.infra.MailConfig.EmailService;
+import com.dinis.cto.infra.security.SecurityUtils;
 import com.dinis.cto.infra.security.TokenService;
 import com.dinis.cto.model.person.Address;
 import com.dinis.cto.model.person.Contact;
 import com.dinis.cto.model.person.Phone;
 import com.dinis.cto.model.person.User;
 import com.dinis.cto.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -85,10 +87,12 @@ public class UserService implements UserDetailsService {
 
     //todo: Testar
     @Transactional
-    public DataUserDTO updateUser(Long userId, DataUserUpdateDTO updateData) {
-        // Busca o usuário existente
-        User user = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    public DataUserDTO updateUser(HttpServletRequest request, Long userId, DataUserUpdateDTO updateData) {
+        // 🔹 Obtém o usuário autenticado (sem acessar o banco novamente)
+        User user = SecurityUtils.authenticateAndGetUser(request);
+
+        // 🔹 Agora verifica se ele tem permissão
+        SecurityUtils.verifyUserPermission(request, userId);
 
         // Atualiza os campos básicos do usuário
         if (updateData.cpf() != null) {
@@ -177,10 +181,12 @@ public class UserService implements UserDetailsService {
 
 
     //todo: testar
-    public User updatePassword(Long userId, DataPasswordUpdateDTO data) {
-        // Buscar o usuário pelo ID
-        User user = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    public User updatePassword(HttpServletRequest request, DataPasswordUpdateDTO data) {
+        // Obter o usuário autenticado
+        User user = SecurityUtils.authenticateAndGetUser(request);
+
+        // Verifica se o usuário autenticado tem permissão para alterar a senha (garante que ele está tentando alterar a própria senha)
+        SecurityUtils.verifyUserPermission(request, user.getId());
 
         // Passo 1: Verificar se a senha atual está correta
         if (!passwordEncoder.matches(data.currentPassword(), user.getPassword())) {
@@ -203,6 +209,7 @@ public class UserService implements UserDetailsService {
         // Salvar o usuário com a nova senha
         return repository.save(user);
     }
+
 
 
 

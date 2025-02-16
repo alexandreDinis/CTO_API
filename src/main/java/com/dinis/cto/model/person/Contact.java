@@ -21,7 +21,7 @@ public class Contact {
     private String name;
     private String department;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "contact_id") // Define a coluna de chave estrangeira na tabela Phone
     private List<Phone> phones = new ArrayList<>();
 

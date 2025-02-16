@@ -1,6 +1,7 @@
 package com.dinis.cto.infra.security;
 
 
+import com.dinis.cto.model.person.User;
 import com.dinis.cto.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,14 +31,19 @@ public class SecurityFilter extends OncePerRequestFilter {
         var token = recuperarToken(request);
 
         if(token != null){
-
             var subject = tokenService.getSubject(token);
-
             var user =  repository.findByContactEmail(subject);
 
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            if (user != null) {
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                if (user instanceof User) {
+                    request.setAttribute("userID",
+                            ((User) user).getId());
+                }
+            }
         }
 
         filterChain.doFilter(request, response);
